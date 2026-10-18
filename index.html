@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tic Tac Toe - Super Complete</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#0a0a0f;font-family:'Inter',sans-serif;color:white;overflow:hidden}
+body::before{content:"";position:fixed;width:1000px;height:1000px;background:radial-gradient(circle,rgba(110,80,255,.35),rgba(0,140,255,.22) 30%,transparent 70%);filter:blur(40px);top:50%;left:50%;transform:translate(-50%,-50%)}
+.wrap{width:100vw;height:100vh;display:flex;justify-content:center;align-items:center;padding:12px;overflow-y:auto}
+.card{background:rgba(20,20,28,.96);backdrop-filter:blur(20px);padding:22px;border-radius:28px;width:100%;max-width:390px;border:1px solid rgba(255,255,255,.08);box-shadow:0 20px 60px rgba(0,0,0,.6);text-align:center;max-height:95vh;overflow-y:auto}
+.logo{width:60px;height:60px;margin:0 auto 8px;border-radius:50%;background:conic-gradient(from 180deg,#6e80ff,#8b5cf6,#3b82f6,#a855f7,#6e80ff);display:flex;justify-content:center;align-items:center;box-shadow:0 0 30px rgba(110,80,255,.6);font-size:28px}
+h1{font-size:24px;font-weight:800}.sub{color:#8888a8;font-size:12px;margin:4px 0 16px}
+.btn{width:100%;padding:12px;border:none;border-radius:12px;font-weight:700;cursor:pointer;margin:5px 0;transition:.15s}
+.btn-primary{background:linear-gradient(90deg,#5b6cff,#8b5cf6);color:white;box-shadow:0 0 18px rgba(99,102,241,.35)}
+.btn-secondary{background:#1c1c26;color:#ccc;border:1px solid #2a2a38}
+.btn-small{width:auto;padding:8px 12px;font-size:12px;display:inline-block;margin:4px}
+.hidden{display:none!important}
+#status{margin:10px 0;padding:10px;border-radius:12px;background:#1e1e2f;color:#a5b4fc;font-weight:700;font-size:13px;border:1px solid #2e2e42;transition:.3s}
+#status.win{background:linear-gradient(90deg,#6366f1,#8b5cf6);color:white;animation:popStatus.4s}
+@keyframes popStatus{0%{transform:scale(.9)}100%{transform:scale(1)}}
+.board-wrap{position:relative;width:100%;max-width:300px;margin:12px auto;aspect-ratio:1/1}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;height:100%}
+.cell{aspect-ratio:1/1;background:#171722;border:1px solid #2a2a3c;border-radius:16px;display:flex;justify-content:center;align-items:center;font-size:clamp(32px,9vw,44px);font-weight:800;cursor:pointer;transition:.12s;position:relative;z-index:1}
+.cell:active{transform:scale(.92)}
+.cell.x{color:#60a5fa}.cell.o{color:#c4b5fd}
+.cell.win{color:white!important;transform:scale(1.05)}
+.cell.locked{pointer-events:none}
+.cell.hint{animation:hintPulse 1s infinite}
+@keyframes hintPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.7)}50%{box-shadow:0 0 0 12px rgba(99,102,241,0)}}
+/* GARIS MENANG */
+#winLine{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;display:none}
+#winLine svg{width:100%;height:100%;overflow:visible}
+#winLine line{stroke:url(#grad);stroke-width:8;stroke-linecap:round;filter:drop-shadow(0 0 10px #8b5cf6);stroke-dasharray:400;stroke-dashoffset:400;animation:drawLine.6s ease forwards}
+@keyframes drawLine{to{stroke-dashoffset:0}}
+.score{display:flex;gap:8px;margin-top:10px}.score div{flex:1;background:#15151f;border:1px solid #222233;border-radius:12px;padding:8px;font-size:11px;color:#777}.score span{color:white;font-weight:800;font-size:18px;display:block}
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #1f1f2a;font-size:14px;color:#bbb}
+.settings-row select,input{padding:7px 10px;border-radius:10px;background:#1c1c26;color:white;border:1px solid #2a2a38}
+#fsOverlay{position:fixed;inset:0;background:rgba(10,10,15,.98);z-index:9999;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.switch{width:42px;height:22px;background:#2a2a3a;border-radius:20px;position:relative;cursor:pointer}.switch.on{background:#6366f1}.switch::after{content:"";position:absolute;width:16px;height:16px;background:white;border-radius:50%;top:3px;left:3px;transition:.2s}.switch.on::after{left:23px}
+.turnDot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:100}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div id="fsOverlay" onclick="document.documentElement.requestFullscreen()"><div class="logo" style="width:84px;height:84px;font-size:40px">∞</div><h2 style="background:linear-gradient(90deg,#6e80ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:28px">TAP UNTUK MULAI</h2><p style="color:#666;margin-top:6px">Meta AI • Fullscreen</p></div>
+
+<div class="wrap">
+  <div class="card" id="menuScreen">
+    <div class="logo">∞</div><h1>Meta Tic Tac Toe</h1><div class="sub">V3 • Super Complete + Garis Menang</div>
+    <button class="btn btn-primary" onclick="showScreen('playModeScreen')">▶️ START</button>
+    <button class="btn btn-secondary" onclick="showScreen('settingsScreen')">⚙️ Pengaturan</button>
+    <button class="btn btn-secondary" onclick="showScreen('statsScreen')">📊 Statistik</button>
+    <button class="btn btn-secondary" onclick="showScreen('aboutScreen')">ℹ️ Tentang</button>
+    <button class="btn btn-secondary" onclick="document.documentElement.requestFullscreen()">⛶ Fullscreen</button>
+  </div>
+
+  <div class="card hidden" id="playModeScreen">
+    <h2>Pilih Mode</h2>
+    <button class="btn btn-primary" onclick="startGame('bot-easy')">🤖 Bot Mudah</button>
+    <button class="btn btn-primary" onclick="startGame('bot-hard')">🧠 Bot Susah</button>
+    <button class="btn btn-primary" onclick="startGame('2p')">👥 2 Player</button>
+    <div class="settings-row"><label>Best of</label><select id="bestOf"><option value="1">1 Game</option><option value="3">Best of 3</option><option value="5">Best of 5</option></select></div>
+    <button class="btn btn-secondary" onclick="showScreen('menuScreen')">← Kembali</button>
+  </div>
+
+  <div class="card hidden" id="gameScreen">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <button class="btn btn-secondary btn-small" onclick="showScreen('menuScreen')">← Menu</button>
+      <span id="modeLabel" style="font-size:11px;color:#888"></span>
+      <button class="btn btn-secondary btn-small" onclick="resetGame()">↻ Reset</button>
+    </div>
+    <div id="status"><span class="turnDot" style="background:#60a5fa"></span> Giliran: X</div>
+    <div class="board-wrap">
+      <div class="board" id="board"></div>
+      <div id="winLine"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#5b6cff"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs><line id="lineEl" x1="0" y1="0" x2="0" y2="0"/></svg></div>
+    </div>
+    <div style="display:flex;gap:6px;justify-content:center">
+      <button class="btn btn-secondary btn-small" onclick="undo()">↩️ Undo</button>
+      <button class="btn btn-secondary btn-small" onclick="hint()">💡 Hint</button>
+      <button class="btn btn-secondary btn-small" onclick="resetGame()">🔄 Baru</button>
+    </div>
+    <div class="score"><div>X <span id="sx">0</span><small id="bx" style="display:block;color:#666;font-size:10px"></small></div><div>SERI <span id="sd">0</span></div><div>O <span id="so">0</span><small id="bo" style="display:block;color:#666;font-size:10px"></small></div></div>
+  </div>
+
+  <div class="card hidden" id="settingsScreen">
+    <h2>⚙️ Pengaturan</h2>
+    <div class="settings-row"><label>Suara</label><div class="switch on" id="soundSwitch" onclick="this.classList.toggle('on')"></div></div>
+    <div class="settings-row"><label>Getar</label><div class="switch" id="vibSwitch" onclick="this.classList.toggle('on')"></div></div>
+    <div class="settings-row"><label>Animasi Garis</label><div class="switch on" id="lineSwitch" onclick="this.classList.toggle('on')"></div></div>
+    <div class="settings-row"><label>Nama X</label><input id="p1Name" value="dika" style="width:110px"></div>
+    <div class="settings-row"><label>Nama O</label><input id="p2Name" value="Dika AI" style="width:110px"></div>
+    <button class="btn btn-primary" onclick="showScreen('menuScreen')">Simpan</button>
+  </div>
+
+  <div class="card hidden" id="statsScreen"><h2>📊 Statistik</h2><div id="statBox" style="text-align:left;margin:14px 0;color:#aaa;line-height:2;font-size:14px"></div><button class="btn btn-secondary" onclick="resetStats()">Reset</button><button class="btn btn-secondary" onclick="showScreen('menuScreen')">Kembali</button></div>
+  <div class="card hidden" id="aboutScreen"><div class="logo">∞</div><h2>Fitur Lengkap</h2><p style="color:#888;font-size:12px;line-height:1.6;margin:10px 0">✓ Garis menang animasi<br>✓ Confetti<br>✓ Undo & Hint<br>✓ Best of 3/5<br>✓ Suara, Getar, Statistik<br>✓ Fullscreen Paksa<br>✓ Responsive HP</p><button class="btn btn-secondary" onclick="showScreen('menuScreen')">Kembali</button></div>
+</div>
+
+<script>
+const fsOverlay=document.getElementById('fsOverlay');
+document.addEventListener('fullscreenchange',()=>fsOverlay.style.display=document.fullscreenElement?'none':'flex');
+function showScreen(id){document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');if(id==='statsScreen')renderStats();}
+let board,cur,active,mode='bot-hard',scores={X:0,O:0,D:0},history=[],bestOf=1,round={X:0,O:0};
+const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const boardEl=document.getElementById('board'),statusEl=document.getElementById('status'),lineWrap=document.getElementById('winLine'),lineEl=document.getElementById('lineEl');
+function startGame(m){mode=m;bestOf=parseInt(document.getElementById('bestOf').value);round={X:0,O:0};document.getElementById('modeLabel').textContent=m.toUpperCase()+' • BO'+bestOf;showScreen('gameScreen');resetGame();if(!document.fullscreenElement)document.documentElement.requestFullscreen();}
+function resetGame(){board=Array(9).fill('');cur='X';active=true;history=[];lineWrap.style.display='none';statusEl.className='';statusEl.innerHTML=`<span class="turnDot" style="background:${cur==='X'?'#60a5fa':'#c4b5fd'}"></span> Giliran: ${getName(cur)} (${cur})`;draw();}
+function draw(){boardEl.innerHTML='';board.forEach((v,i)=>{const d=document.createElement('div');d.className='cell '+(v?v.toLowerCase():'')+(!active?' locked':'');d.textContent=v;d.onclick=()=>playerMove(i);boardEl.appendChild(d);});updateScore();}
+function playerMove(i){
+  if(!active||board[i]!=='')return;
+  if(isSound())clickSound();
+  if(isVib()&&navigator.vibrate)navigator.vibrate(30);
+  doMove(i);
+  if(active&&mode!=='2p'&&cur==='O'){boardEl.style.pointerEvents='none';setTimeout(()=>{botMove();boardEl.style.pointerEvents='auto';},450);}
+}
+function doMove(i){
+  history.push([...board]);board[i]=cur;
+  let winLine=null;
+  for(let l of wins)if(board[l[0]]&&board[l[0]]===board[l[1]]&&board[l[0]]===board[l[2]])winLine=l;
+  if(winLine){
+    active=false;draw();setTimeout(()=>{showWinLine(winLine);fireConfetti();},100);
+    statusEl.textContent=`${getName(cur)} MENANG! 🎉`;statusEl.classList.add('win');
+    scores[cur]++;round[cur]++;save();
+    if(bestOf>1&& (round.X+round.O < bestOf) && Math.max(round.X,round.O) <= Math.floor(bestOf/2)){ setTimeout(()=>{ alert(`Skor BO${bestOf}: ${round.X}-${round.O}\nLanjut ronde berikutnya!`); resetGame(); },1200); }
+    return;
+  }
+  if(!board.includes('')){active=false;statusEl.textContent='SERI! 😅';scores.D++;save();draw();return;}
+  cur=cur==='X'?'O':'X';statusEl.innerHTML=`<span class="turnDot" style="background:${cur==='X'?'#60a5fa':'#c4b5fd'}"></span> Giliran: ${getName(cur)} (${cur})`;draw();
+}
+function showWinLine(line){
+  if(!isLine()){line.forEach(i=>boardEl.children[i].classList.add('win'));return;}
+  const pos={0:[16,16,84,16],1:[16,50,84,50],2:[16,84,84,84],3:[16,16,16,84],4:[50,16,50,84],5:[84,16,84,84],6:[16,16,84,84],7:[84,16,16,84]};
+  const key=JSON.stringify(line);const map={'[0,1,2]':0,'[3,4,5]':1,'[6,7,8]':2,'[0,3,6]':3,'[1,4,7]':4,'[2,5,8]':5,'[0,4,8]':6,'[2,4,6]':7};
+  const idx=map[key];const p=pos[idx];
+  lineEl.setAttribute('x1',p[0]);lineEl.setAttribute('y1',p[1]);lineEl.setAttribute('x2',p[0]);lineEl.setAttribute('y2',p[1]);
+  lineWrap.style.display='block';
+  setTimeout(()=>{lineEl.setAttribute('x2',p[2]);lineEl.setAttribute('y2',p[3]);},50);
+  line.forEach(i=>boardEl.children[i].classList.add('win'));
+}
+function botMove(){
+  if(!active)return;
+  let m;if(mode==='bot-easy'){let e=board.map((v,i)=>v===''?i:null).filter(v=>v!==null);m=e[Math.floor(Math.random()*e.length)];}
+  else{let best=-Infinity;for(let i=0;i<9;i++)if(!board[i]){board[i]='O';let s=minimax(board,0,false);board[i]='';if(s>best){best=s;m=i;}}}
+  if(m!==undefined)doMove(m);
+}
+function minimax(b,d,isMax){for(let l of wins){if(b[l[0]]&&b[l[0]]===b[l[1]]&&b[l[0]]===b[l[2]])return b[l[0]]==='O'?10-d:d-10;}if(!b.includes(''))return 0;if(isMax){let best=-Infinity;for(let i=0;i<9;i++)if(b[i]===''){b[i]='O';best=Math.max(best,minimax(b,d+1,false));b[i]='';}return best;}else{let best=Infinity;for(let i=0;i<9;i++)if(b[i]===''){b[i]='X';best=Math.min(best,minimax(b,d+1,true));b[i]='';}return best;}}
+function undo(){if(history.length===0||!active)return;board=history.pop();cur=cur==='X'?'O':'X';statusEl.textContent=`Giliran: ${getName(cur)} (${cur})`;lineWrap.style.display='none';draw();}
+function hint(){if(!active)return;let best=-Infinity,m;for(let i=0;i<9;i++)if(!board[i]){board[i]=cur;let s=minimax(board,0,cur==='X');board[i]='';if(s>best){best=s;m=i;}}if(m!==undefined){boardEl.children[m].classList.add('hint');setTimeout(()=>boardEl.children[m].classList.remove('hint'),1000);}}
+function getName(s){return s==='X'?document.getElementById('p1Name').value:document.getElementById('p2Name').value;}
+function isSound(){return document.getElementById('soundSwitch').classList.contains('on')}
+function isVib(){return document.getElementById('vibSwitch').classList.contains('on')}
+function isLine(){return document.getElementById('lineSwitch').classList.contains('on')}
+function clickSound(){try{let c=new(window.AudioContext||window.webkitAudioContext)();let o=c.createOscillator();let g=c.createGain();o.frequency.value=700;g.gain.setValueAtTime(.12,c.currentTime);g.gain.exponentialRampToValueAtTime(.01,c.currentTime+.12);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.12);}catch{}}
+function save(){localStorage.setItem('ttt_scores',JSON.stringify(scores));}
+function updateScore(){document.getElementById('sx').textContent=scores.X;document.getElementById('so').textContent=scores.O;document.getElementById('sd').textContent=scores.D;if(bestOf>1){document.getElementById('bx').textContent=`BO: ${round.X}`;document.getElementById('bo').textContent=`BO: ${round.O}`;}}
+function renderStats(){try{scores=JSON.parse(localStorage.getItem('ttt_scores'))||scores;}catch{}document.getElementById('statBox').innerHTML=`X Menang: <b style="color:white">${scores.X}</b><br>O Menang: <b style="color:white">${scores.O}</b><br>Seri: <b style="color:white">${scores.D}</b><br>Total: <b style="color:white">${scores.X+scores.O+scores.D}</b>`;updateScore();}
+function resetStats(){scores={X:0,O:0,D:0};round={X:0,O:0};localStorage.removeItem('ttt_scores');renderStats();}
+function fireConfetti(){const canvas=document.getElementById('confetti'),ctx=canvas.getContext('2d');canvas.width=innerWidth;canvas.height=innerHeight;let pieces=[];for(let i=0;i<120;i++)pieces.push({x:innerWidth/2,y:innerHeight/3,dx:(Math.random()-.5)*12,dy:Math.random()*-12-2,c:`hsl(${260+Math.random()*40},100%,65%)`,r:Math.random()*6+3});let f=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);pieces.forEach(p=>{p.x+=p.dx;p.y+=p.dy;p.dy+=0.25;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();});if(pieces[0].y<innerHeight+100)requestAnimationFrame(f);else ctx.clearRect(0,0,canvas.width,canvas.height);};f();}
+try{scores=JSON.parse(localStorage.getItem('ttt_scores'))||scores;}catch{}renderStats();
+</script>
+</body>
+</html>
